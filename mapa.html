@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Mapa de recuerdos 💕</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+  <style>
+    body {
+      font-family: 'Arial', sans-serif;
+      text-align: center;
+      margin: 0;
+      padding: 0;
+    }
+    h1 {
+      margin: 20px 0;
+    }
+    #map {
+      height: 600px;
+      width: 100%;
+    }
+  </style>
+</head>
+<body>
+  <h1>Mapa de Recuerdos con Mi Amor 💖</h1>
+  <div id="map"></div>
+
+  <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+  <script>
+    const map = L.map('map').setView([40.4168, -3.7038], 4); // Madrid centrado
+
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '&copy; OpenStreetMap contributors'
+    }).addTo(map);
+
+    // Lista de lugares visitados
+    const lugares = [
+      {
+        nombre: "París",
+        coords: [48.8566, 2.3522],
+        fecha: "15 de marzo 2023",
+        descripcion: "Primera vez viendo la Torre Eiffel juntos. 💕"
+      },
+      {
+        nombre: "Venecia",
+        coords: [45.4408, 12.3155],
+        fecha: "20 de junio 2023",
+        descripcion: "Paseo en góndola al atardecer. 🌅"
+      },
+      {
+        nombre: "Lisboa",
+        coords: [38.7223, -9.1393],
+        fecha: "5 de abril 2024",
+        descripcion: "Pasteles de nata y vistas hermosas. 🍰"
+      }
+    ];
+
+    lugares.forEach(lugar => {
+      L.marker(lugar.coords)
+        .addTo(map)
+        .bindPopup(`<b>${lugar.nombre}</b><br>${lugar.fecha}<br>${lugar.descripcion}`);
+    });
+  </script>
+</body>
+</html>

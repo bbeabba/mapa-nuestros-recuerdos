@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Mapa de recuerdos 💕</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+  <style>
+    body {
+      font-family: 'Comic sans', sans-serif;
+      text-align: center;
+      margin: 0;
+      padding: 0;
+    }
+    #login {
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      background: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+      z-index: 9999;
+    }
+    #login input {
+      padding: 10px;
+      margin-bottom: 10px;
+    }
+    #login button {
+      padding: 10px 20px;
+      background-color: #ff66a3;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+    h1 {
+      margin: 20px 0;
+    }
+    #map {
+      height: 600px;
+      width: 100%;
+      cursor: crosshair;
+    }
+    #formulario {
+      margin: 20px auto;
+      max-width: 400px;
+      text-align: left;
+      padding: 10px;
+      background-color: #ffe6f0;
+      border-radius: 10px;
+    }
+    #formulario input, #formulario textarea {
+      width: 100%;
+      margin-bottom: 10px;
+      padding: 5px;
+    }
+    #formulario button {
+      background-color: #ff66a3;
+      color: white;
+      padding: 10px;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      width: 100%;
+    }
+    .coordenadas-hint {
+      font-size: 12px;
+      color: #888;
+      margin-bottom: 5px;
+    }
+    #acciones {
+      margin: 10px auto;
+      max-width: 400px;
+    }
+    #acciones button {
+      margin: 5px;
+      padding: 8px 12px;
+      border-radius: 5px;
+      border: none;
+      cursor: pointer;
+      background-color: #ffb3d1;
+      color: #fff;
+    }
+  </style>
+</head>
+<body>
+  <div id="login">
+    <h2>🔐 Acceso privado</h2>
+    <input type="password" id="clave" placeholder="Contraseña" />
+    <button onclick="verificarPassword()">Entrar</button>
+  </div>
+
+  <h1 style="display:none;">Mapa de Recuerdos con mi chikitiwi 💖</h1>
+
+  <div id="formulario" style="display:none;">
+    <h3>Agregar nuevo recuerdo</h3>
+    <div class="coordenadas-hint">Haz clic en el mapa para rellenar latitud y longitud automáticamente</div>
+    <input type="text" id="nombre" placeholder="Lugar" required />
+    <input type="text" id="lat" placeholder="Latitud" required />
+    <input type="text" id="lng" placeholder="Longitud" required />
+    <input type="text" id="fecha" placeholder="Fecha (ej. 10 julio 2025)" />
+    <textarea id="descripcion" placeholder="Descripción"></textarea>
+    <input type="text" id="imagen" placeholder="URL de imagen" />
+    <button onclick="agregarLugar()">Añadir al mapa</button>
+  </div>
+
+  <div id="acciones" style="display:none;">
+    <button onclick="eliminarTodos()">🗑️ Eliminar todos los recuerdos</button>
+    <button onclick="descargarJSON()">📁 Exportar recuerdos</button>
+  </div>
+
+  <div id="map" style="display:none;"></div>
+
+  <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+  <script>
+    // Contraseña en forma codificada (básica)
+    const passwordCodificada = 'bWlwYXNzd29yZHNlY3JldG8='; // Base64 de "mipasswordsecreto"
+
+    function verificarPassword() {
+      const clave = document.getElementById('clave').value;
+      const claveCodificada = btoa(clave);
+      if (claveCodificada === passwordCodificada) {
+        document.getElementById('login').style.display = 'none';
+        document.querySelector('h1').style.display = 'block';
+        document.getElementById('formulario').style.display = 'block';
+        document.getElementById('map').style.display = 'block';
+        document.getElementById('acciones').style.display = 'block';
+        iniciarMapa();
+      } else {
+        alert('Contraseña incorrecta 💔');
+      }
+    }
+
+    function iniciarMapa() {
+      const map = L.map('map').setView([40.4168, -3.7038], 4);
+
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '&copy; OpenStreetMap contributors'
+      }).addTo(map);
+
+      const iconoCorazon = L.icon({
+        iconUrl: 'https://cdn-icons-png.flaticon.com/512/833/833472.png',
+        iconSize: [32, 32],
+        iconAnchor: [16, 32],
+        popupAnchor: [0, -32]
+      });
+
+      let lugares = JSON.parse(localStorage.getItem('lugaresGuardados')) || [];
+
+      function mostrarLugar(lugar) {
+        L.marker(lugar.coords, { icon: iconoCorazon })
+          .addTo(map)
+          .bindPopup(`
+            <b>${lugar.nombre}</b><br>
+            ${lugar.fecha}<br>
+            ${lugar.descripcion}<br>
+            <img src="${lugar.imagen}" alt="${lugar.nombre}" style="width:100px; margin-top:5px; border-radius:8px;" />
+          `);
+      }
+
+      lugares.forEach(mostrarLugar);
+
+      window.agregarLugar = function() {
+        const nombre = document.getElementById('nombre').value;
+        const lat = parseFloat(document.getElementById('lat').value);
+        const lng = parseFloat(document.getElementById('lng').value);
+        const fecha = document.getElementById('fecha').value;
+        const descripcion = document.getElementById('descripcion').value;
+        const imagen = document.getElementById('imagen').value;
+
+        if (!nombre || isNaN(lat) || isNaN(lng)) {
+          alert("Por favor completa el lugar, latitud y longitud correctamente.");
+          return;
+        }
+
+        const nuevoLugar = {
+          nombre,
+          coords: [lat, lng],
+          fecha,
+          descripcion,
+          imagen
+        };
+
+        lugares.push(nuevoLugar);
+        localStorage.setItem('lugaresGuardados', JSON.stringify(lugares));
+
+        mostrarLugar(nuevoLugar);
+        map.setView([lat, lng], 6);
+
+        document.getElementById('formulario').reset();
+      }
+
+      window.eliminarTodos = function() {
+        if (confirm("¿Estás seguro de que quieres borrar todos los recuerdos?")) {
+          localStorage.removeItem('lugaresGuardados');
+          location.reload();
+        }
+      }
+
+      window.descargarJSON = function() {
+        const blob = new Blob([JSON.stringify(lugares, null, 2)], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'recuerdos.json';
+        a.click();
+        URL.revokeObjectURL(url);
+      }
+
+      map.on('click', function(e) {
+        document.getElementById('lat').value = e.latlng.lat.toFixed(6);
+        document.getElementById('lng').value = e.latlng.lng.toFixed(6);
+      });
+    }
+  </script>
+</body>
+</html>
